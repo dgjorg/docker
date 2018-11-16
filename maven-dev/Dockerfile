@@ -1,22 +1,20 @@
 FROM maven:3.6.0-jdk-8-alpine
 
-ENV HTTP_PROXY http://10.5.96.18:3128 
-ENV HTTPS_PROXY http://10.5.96.18:3128
+# if the system is under proxy set the proxy details
+# ENV HTTP_PROXY http://<host>:<port> 
+# ENV HTTPS_PROXY http://<host>:<port> 
 
-RUN apk update && apk add vim
+# if proxy is needed for maven put the details in the mvn_settings.xml
+# COPY mvn_settings.xml /root/.m2/settings.xml
 
-RUN apk update && apk add git 
+# install vim
+RUN apk update && apk add vim 
 
-RUN apk update && apk add openssh 
+# create the working directory
+RUN mkdir -p /home/uclient/development 
 
-COPY mvn_settings.xml /root/.m2/settings.xml
-
-RUN mkdir -p /home/uclient/development
-
+# set the working directory
 WORKDIR /home/uclient/development
 
-# COPY test-common /usr/src/mymaven/test-common
-# RUN cd /usr/src/mymaven/test-common && mvn clean install
-# RUN cd /usr/src/mymaven/
-
+# set the entrypoint that is taken form the FROM repository
 ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]

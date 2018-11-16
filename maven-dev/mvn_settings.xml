@@ -7,8 +7,8 @@
       <id>proxy</id>
       <active>true</active>
       <protocol>http</protocol>
-      <host>10.5.96.18</host>
-      <port>3128</port>
+      <host>host</host>
+      <port>port</port>
     </proxy>
   </proxies>
 </settings>

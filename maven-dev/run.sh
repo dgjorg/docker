@@ -1,15 +1,10 @@
 #!/bin/bash
 
-if [ "$#" -ne 2 ]; then
-  echo "error"
-  exit
-fi
+echo "-----------------------------------------"
+echo " docker run --rm -it mydev:latest bash "
+echo "-----------------------------------------"
 
-image_name=$1
-version=$2
-
-echo "-----------------------------------"
-echo " build ${image_name}:${version}"
-echo " build ${image_name}:latest"
-echo "-----------------------------------"
-docker build -t ${image_name}:${version} -t ${image_name}:latest .
+docker run --rm -it \
+        -v /home/uclient/development:/home/uclient/development \
+        mydev:latest \
+bash
