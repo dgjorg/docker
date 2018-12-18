@@ -1,0 +1,20 @@
+# Delete all untagged images, used ones as well when the container using them is stopped 
+docker rmi -f $(docker images -q --filter "dangling=true")
+
+# Delete all containers
+docker rm $(docker ps -aq)
+
+# Delete all images
+docker rmi $(docker images -q)
+
+# Remove all stopped containers
+$ docker rm $(docker ps -a -q)
+
+# Stop all running containers
+$ docker stop $(docker ps -a -q)
+  
+Here is a breakdown of docker ps -a -q
+    docker ps list containers
+    -a the option to list all containers, even stopped ones. Without this, it defaults to only listing running containers
+    -q the quiet option to provide only container numeric IDs, rather than a whole table of information about containers
+
