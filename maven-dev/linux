@@ -1,0 +1,254 @@
+# Delete user
+Usage: userdel [options] LOGIN
+
+Options:
+  -f, --force                   force some actions that would fail otherwise
+                                e.g. removal of user still logged in
+                                or files, even if not owned by the user
+  -r, --remove                  remove home directory and mail spool
+
+# Use chown to change ownership and chmod to change rights.
+  -R option to apply the rights for all files inside of a directory too.
+
+$ sudo chown -R username:group directory
+
+$ sudo chown username:group directory
+will only change the permission of the folder directory but will leave the files and folders inside the directory alone.
+
+
+-rwxrw-r--    1    root   root 2048    Jan 13 07:11 afile.exe
+
+    file permissions,
+    number of links,
+    owner name,
+    owner group,
+    file size,
+    time of last modification, and
+    file/directory name
+
+File permissions is displayed as following;
+
+    first character is - or l or d, d indicates a directory, a line represents a file, l is a symlink (or soft link) - special type of file
+    three sets of characters, three times, indicating permissions for owner, group and other:
+        r = readable
+        w = writable
+        x = executable
+
+In your example -rwxrw-r--, this means the line displayed is:
+
+    a regular file (displayed as -)
+    readable, writable and executable by owner (rwx)
+    readable, writable, but not executable by group (rw-)
+    readable but not writable or executable by other (r--)
+
+New-NetNat –Name NATNetwork –InternalIPInterfaceAddressPrefix 10.0.5.0/24 –Verbose
+
+
+Windows 10: How to setup NAT network for Hyper-V guests?
+--Anand--	Computers and Internet	January 6, 2018	2 Minutes	
+ 
+ 
+ 
+ 
+ 
+ 
+2 Votes
+
+
+Windows 10 Hyper-V has NAT (Network Address Translation) network feature, but it needs to setup using PowerShell now.  I will show you step by step instructions how to do it. NAT Switch provides Internet access to the VM without creating External Switch (linking the switch to physical wired or wireless adaptor).
+
+Before we start, here are the requirements to prepare it ahead of time.
+
+1.  IP Network to be used in Guests. You need to find a subnet that is not being using in your Office network. If you are setting up on your Home, you can choose any subnet that is not used in your home. E.g., 192.168.200.0/24
+
+2. Guest VMs are needed to assign IP address/subnet/gateway manually from the subnet you choose on requirement 1 above. Or you may need to setup in DHCP server in one of the Guest VMs for automatic IP assignment. If you only have one or two guest VMs, you may set the IP address manually on NICs.
+
+Now the step by step instruction.
+Step 1: Open PowerShell with Administrative privileges.
+
+Search PowerShell in Start menu search, right click on PowerShell and choose More ==> Run As Administrator.
+Step 2: Create Hyper-V internal only switch.
+
+Run this command on the PowerShell.
+
+    New-VMSwitch –SwitchName “NAT-Switch” –SwitchType Internal –Verbose
+
+Step 3: Find the Interface Index number
+
+Type this cmdlet and note down the interface index (ifIndex) for NAT-Switch adaptor.
+
+    Get-NetAdapter
+
+Step 4: Create NAT Gateway
+
+Run this cmdlet. Replace
+
+    IP Address (gateway) with your own (should be from the network subnet you chose in the requirements section above)
+    PrefixLength is the subnet mask number for the subnet you chose
+    Interface index you noted down on previous step.
+
+    New-NetIPAddress –IPAddress 192.168.200.1 -PrefixLength 24 -InterfaceIndex 16 –Verbose
+
+Step 4: Create NAT Network
+
+Run this cmdlet and replace InternelIPInterfaceAddressPrefix with your chosen network.
+
+    New-NetNat –Name NATNetwork –InternalIPInterfaceAddressPrefix 192.168.200.0/24 –Verbose
+
+Step 5: Connect your VM to the NAT-Switch
+
+You may manually assign the Guest NIC to the “NAT-Switch” which we created in Step-2.  Or you may run this cmdlet to assign NIC from all Guest VMs to the “NAT-Switch”
+
+    Get-VM | Get-VMNetworkAdapter | Connect-VMNetworkAdapter –SwitchName “NAT-Switch”
+
+Step 6: Assign IP Address to the NICs in Guests
+
+Open NIC properties in your Guest VMs, Assign IPv4 addresses from the network subject you setup in Step-4.  Or run DHCP server from one of your Guests to dish IP address automatically.
+
+E.g.,
+
+Guest VM 1:
+
+IP Address: 192.168.200.11
+Subnet: 255.255.255.0
+Gateway: 192.168.200.1
+DNS: 4.2.2.2 and 8.8.8.8 (or your own DNS server from the office network).
+
+Guest VM 2:
+
+IP Address: 192.168.200.12
+Subnet: 255.255.255.0
+Gateway: 192.168.200.1
+DNS: 4.2.2.2 and 8.8.8.8 (or your own DNS server from the office network).
+
+That’s all. By  now you guests should have access to External networks and Internet.
+
+Hope this helped you. Leave me a reply below. \
+
+
+
+
+Configure CentOS 6 Network Settings
+Overview
+
+This tutorial will walk you through configuring your network configurations on CentOS 6.X. There are three different methods to choose from, depending on what installation type and packages you have installed.
+
+Manual configuration is done by directly modifying the configuration files. You will need to be comfortable with the command-line for this one. However, this will give you the most flexibility and is worth learning.
+
+System Config Network is a command-line tool that presents a very basic graphical interface. This a great tool for those who just want to quickly configure the network and do not require advanced features, like interface bonding (teaming).
+
+And lastly, from a Gnome desktop. This is for those trying Linux out, who have yet to venture into command-line territory, or have no interest in it at all.
+Manual Configuration
+
+This configuration is done by modifying the network configuration directly, using a text editor. This method is typical for servers and is a more advanced way of doing it.
+Set the Hostname
+
+    Open the following file into a text editor, like VI or Nano.
+
+    vi /etc/sysconfig/network
+
+    Change the hostname value to the fully qualified name of your computer.
+
+    HOSTNAME=slcentos6-01.serverlab.intra
+
+    Save your changes and exit the text editor. The new name will be applied after your next reboot.
+
+Set a DHCP Address
+
+    Open the configuration file for the first network interface, eth0, into a text editor.
+
+    vi /etc/sysconfig/network-scripts/ifcfg-eth0
+
+    Modify the file to look similar to the example below.
+
+    DEVICE=eth0
+    TYPE=Ethernet
+    ONBOOT=yes
+    BOOTPROTO=dhcp
+    IPV4_FAILURE_FATAL=yes
+    NAME="System eth0"
+
+    Save your changes and exit the text editor.
+    Restart the network service.
+
+    service network restart
+
+Set a Static IP Address
+
+    Open the configuration file for the first network interface, eth0, into a text editor.
+
+    vi /etc/sysconfig/network-scripts/ifcfg-eth0
+
+    Modify the configuration file to look similar to the one below. Remember to change the highlighted values to match your environment’s.
+
+    DEVICE=eth0
+    TYPE=Ethernet
+    ONBOOT=yes
+    BOOTPROTO=none
+    IPADDR=172.30.0.53
+    PREFIX=24
+    GATEWAY=172.30.0.1
+    IPV4_FAILURE_FATAL=yes
+    NAME="System eth0"
+
+    Save your changes and exit the text editor.
+    Restart the network service.
+
+    service network restart
+
+Setting DNS Name Servers
+
+DNS configurations are set in /etc/resolv.conf. Within this file, we can specify the search domains and the name servers. The search domains are used as default suffixes when no domain is added to a hostname.
+
+    Open the resolvr configuration file into a text editor.
+
+    sudo vi /etc/resolv.conf
+
+    Add the following lines, modifying it them to match your environment.
+
+    domain example.com
+    search example2.com lab.example2.com
+    nameserver 8.8.8.8
+    nameserver 8.8.4.4
+
+    Save your changes and exit the text editor.
+    All changes to resolvr.conf are applied immediately.
+
+Using the System Config Network Tool
+
+The System Config Network tool is a terminal application that presents a very basic GUI. It can do basic network configurations, such as configuring static or DHCP addresses, setting the DNS server IP addresses, and setting the default gateway.
+Install System Config Network
+
+The base CentOS 6 installation includes the tool by default. To install it on a minimal installation, follow these instructions.
+
+    Install it from the yum repository.
+
+    yum intall system-config-network
+
+    If you have no Internet access, install it from the CentOS DVD. Create a directory in /media called cdrom.
+
+    mkdir -p /media/cdrom
+
+    Mount the CentOS DVD to the directory.
+
+    mount /dev/cdrom /media/cdrom
+
+    Run yum and target the repository that uses the DVD.
+
+    yum --disablerepo=/* --enablerepo=c6-media install system-config-network
+
+
+
+Log in to your server as the root user.
+
+    ssh root@server_ip_address
+
+Use the adduser command to add a new user to your system.
+
+Be sure to replace username with the user that you want to create.
+
+    adduser username
+
+    Set and confirm the new user's password at the prompt. A strong password is highly recommended!
+
+    Set password prompts:
