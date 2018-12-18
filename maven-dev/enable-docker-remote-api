@@ -1,0 +1,76 @@
+# Verify status of the Docker daemon
+sudo systemctl status docker
+
+# Overriding Defaults for the Docker Daemon
+All the docker configurations are present in the file/lib/systemd/system/docker.service.
+In that file, there is an ExecStart parameter.
+
+## Check currently loaded configuration
+sudo systemctl status docker.service | grep Loaded
+
+## Enable Docker Remote API
+To change the value of an option, ExecStart in this case, do the following:
+
+$ sudo systemctl edit docker
+
+This will create the necessary directory structure under /etc/systemd/system/docker.service.d
+and open an editor (using the default editor configured for the user) to the override file.
+Add the section below into the editor for CentOS:
+
+[Service]
+  ExecStart=
+  ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock
+
+Using systemctl edit also ensures that the override settings are loaded.
+Had you edited the file manually using vim etc, you would have to run 
+
+$ sudo systemctl daemon-reload
+
+in order for the new settings to be loaded. The only reason you may want to run the
+systemctl daemon-reload command is if you made a typo or error in the override file when you did systemctl edit.
+For this you would need to be aware of the path of the override file,
+which is/etc/systemd/system/docker.service.d/override.conf.
+
+Finally, in order for the override settings to take effect, restart the daemon using 
+
+$ systemctl restart docker.
+
+Or, both commands in one line:
+
+$ sudo systemctl daemon-reload && sudo service docker restart
+
+
+Again, the status of the new settings and the process health can be verified by running 
+
+$ systemctl status docker.
+
+## Test that the changes are set:
+Note: replace the IP with your Docker host IP or localhost as shown below.
+
+curl http://localhost:2357/version
+curl http://35.225.233.5:2357/version
+
+This is not the safest mmethod check here how to do this more secure:
+https://docs.docker.com/engine/security/https/
+
+## Make Docker remote API port available from outside
+Use this command to find your active zone(s):
+
+$ firewall-cmd --get-active-zones
+
+It will say either public, dmz, or something else. You should only apply to the zones required.
+In the case of public try:
+
+$ firewall-cmd --zone=public --add-port=2357/tcp --permanent
+
+Then remember to reload the firewall for changes to take effect.
+
+$ firewall-cmd --reload
+
+Otherwise, substitute public for your zone, for example, if your zone is dmz:
+
+$ firewall-cmd --zone=dmz --add-port=2357/tcp --permanent
+
+## Links
+https://success.docker.com/article/how-do-i-enable-the-remote-api-for-dockerd
+https://success.docker.com/article/using-systemd-to-control-the-docker-daemon
